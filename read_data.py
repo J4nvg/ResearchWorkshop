@@ -1,3 +1,4 @@
+
 import numpy as np
 import pandas as pd
 from sklearn import datasets
@@ -8,6 +9,13 @@ from sklearn.preprocessing import MinMaxScaler
 def gen_train_test_data(dataset="", train_size=1.0, test_size=0.2, normalize_x=True, seed=42):
     print("dataset: {}, seed: {}".format(dataset, seed))
     print("train_size: {}, test_size: {}".format(train_size, test_size))
+
+    if dataset == "aug_temp":
+        X = pd.read_csv('X_train_temp.csv')
+        y = pd.read_csv('y_train_temp.csv')['target']
+        print("Loaded aug_temp dataset from local CSV files.")
+        return X, y
+
     # classification
     if dataset == "iris":
         ds = datasets.load_iris(as_frame=True)
@@ -119,7 +127,6 @@ def gen_train_test_data(dataset="", train_size=1.0, test_size=0.2, normalize_x=T
 
     if dataset == "adult" or dataset == "compas" or dataset == "bank" or dataset == "abalone" or dataset == "fuel":
         X = np.array(df.loc[:, numerical_var_names])
-        # convert categorical values to categorical indices
         for categorical_var_name in categorical_var_names:
             categorical_var = np.array(pd.Categorical(df.loc[:, categorical_var_name]))
             categorical_val = np.unique(categorical_var)
@@ -131,50 +138,38 @@ def gen_train_test_data(dataset="", train_size=1.0, test_size=0.2, normalize_x=T
             X = np.append(X, categorical_var.reshape(-1, 1), axis=1)
         names = np.append(numerical_var_names, categorical_var_names)
     if dataset == "adult" or dataset == "compas" or dataset == "bank":
-        # get label
         labels = pd.Categorical(df.loc[:, class_var_name])
         y = np.copy(labels.codes)
     if dataset == "abalone" or dataset == "fuel":
-        # get target
         y = df.loc[:, class_var_name]
 
-    # normalize X
-    if normalize_x == True:
+    if normalize_x:
         print("normalize X")
         X = MinMaxScaler().fit_transform(X)
         X = np.around(X, 2)
-    # don't normalize X
-    if normalize_x == False:
+    else:
         print("don't normalize X")
-    # regression task
-    if dataset == "abalone" or dataset == "fuel" or dataset == "california":
-        # convert y to float array
+
+    if dataset in ["abalone", "fuel", "california"]:
         y = np.array([float(val) for val in y])
         y = y.reshape(-1, 1)
-        # create test set
-        X_train_, X_test, y_train_, y_test = train_test_split(X, y, test_size=test_size,
-                                                              shuffle=True, random_state=seed)
-        # create training set
+        X_train_, X_test, y_train_, y_test = train_test_split(X, y, test_size=test_size, shuffle=True, random_state=seed)
         if train_size == 1:
             X_train = X_train_
             y_train = y_train_
         else:
             X_train, _, y_train, _ = train_test_split(X_train_, y_train_, test_size=(1.0 - train_size),
                                                       shuffle=True, random_state=seed)
-    else: # classification task
-        # convert y to integer array
+    else:
         y = np.array([int(val) for val in y])
-        # convert y to label indices
         y_values = np.unique(y)
         y_dict = [{'value': y, 'index': i} for i, y in enumerate(y_values)]
         y_names = [y_dict[idx]['value'] for idx in range(len(y_values))]
         y_indices = [y_dict[idx]['index'] for idx in range(len(y_values))]
         for idx in range(len(y_values)):
             y[y == y_names[idx]] = y_indices[idx]
-        # create test set
         X_train_, X_test, y_train_, y_test = train_test_split(X, y, test_size=test_size,
                                                               shuffle=True, stratify=y, random_state=seed)
-        # create training set
         if train_size == 1:
             X_train = X_train_
             y_train = y_train_
@@ -185,8 +180,6 @@ def gen_train_test_data(dataset="", train_size=1.0, test_size=0.2, normalize_x=T
     print("X_train: {}, y_train: {}".format(X_train.shape, y_train.shape))
     print("X_test: {}, y_test: {}".format(X_test.shape, y_test.shape))
     print("n_train: {}, n_test: {}, n_feature: {}, n_class: {}".format(n_train, n_test, n_feature, n_class))
-    # print("y_train_labels: {}, y_test_labels: {}".format(np.unique(y_train), np.unique(y_test)))
     print("feature_names: {}".format(names))
 
     return X_train, y_train, X_test, y_test, n_train, n_test, n_feature, n_class, names
-
