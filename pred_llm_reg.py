@@ -7,14 +7,16 @@ from tabular_llm.predllm_utils import _encode_row_partial
 from tabular_llm.predllm import PredLLM
 import read_data
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', default="california", type=str, nargs='?', help='dataset name')
-parser.add_argument('--method', default="pred_llm", type=str, nargs='?', help='generative method')
-parser.add_argument('--trainsize', default="1.0", type=str, nargs='?', help='size of training set')
-parser.add_argument('--testsize', default="0.2", type=str, nargs='?', help='size of test set')
-parser.add_argument('--gensize', default="1.0", type=str, nargs='?', help='size of generation set')
-parser.add_argument('--runs', default="3", type=str, nargs='?', help='no of times to run algorithm')
-args = parser.parse_args()
+def get_args():
+    class Args:
+        dataset = "aug_temp"
+        method = "pred_llm"
+        trainsize = 1.0
+        testsize = 0.0
+        gensize = 1.0
+        runs = 1
+    return Args()
+args = get_args()
 print("dataset: {}, method: {}, train_size: {}, test_size: {}, gen_size: {}".
       format(args.dataset, args.method, args.trainsize, args.testsize, args.gensize))
 
